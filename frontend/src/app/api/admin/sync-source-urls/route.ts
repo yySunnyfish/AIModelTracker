@@ -13,10 +13,13 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireAdminAccess } from '@/lib/route_auth'
 import { createServerClient } from '@/lib/supabase'
 import { getModelSources } from '@/lib/source_registry'
 
 export async function POST(request: Request) {
+  const authError = requireAdminAccess(request)
+  if (authError) return authError
   const body = await request.json().catch(() => ({}))
   const force: boolean = body?.force === true
 

@@ -13,6 +13,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireAdminAccess } from '@/lib/route_auth'
 import { createServerClient } from '@/lib/supabase'
 import {
   discoverNewModels,
@@ -39,6 +40,8 @@ function today(): string {
 }
 
 export async function GET(request: Request) {
+  const authError = requireAdminAccess(request)
+  if (authError) return authError
   const { searchParams } = new URL(request.url)
   const since      = searchParams.get('since')    ?? defaultSince()
   const until      = searchParams.get('until')    ?? today()

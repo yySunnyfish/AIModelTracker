@@ -13,6 +13,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireAdminAccess, isUnsafeFilePatchEnabled } from '@/lib/route_auth'
 import * as fs   from 'fs'
 import * as path from 'path'
 
@@ -102,6 +103,12 @@ function appendToRecord(
 // ─── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  const authError = requireAdminAccess(request)
+  if (authError) return authError
+  if (!isUnsafeFilePatchEnabled()) {
+    return NextResponse.json({ error: 'Static file patching is disabled by default' }, { status: 403 })
+  }
+
   let body: { entries: ModelPatchEntry[] }
   try {
     body = await request.json()

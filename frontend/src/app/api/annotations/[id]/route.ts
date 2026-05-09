@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
+import { requireWriteAccess } from '@/lib/route_auth'
 import { createServerClient } from '@/lib/supabase'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authError = requireWriteAccess(request)
+  if (authError) return authError
   const { id } = await params
   const body = await request.json()
   const { content, is_pinned, visibility } = body
@@ -24,7 +27,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   return NextResponse.json(data)
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authError = requireWriteAccess(request)
+  if (authError) return authError
   const { id } = await params
   const supabase = createServerClient()
   const { error } = await supabase

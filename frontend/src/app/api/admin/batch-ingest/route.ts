@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server'
+import { requireAdminAccess } from '@/lib/route_auth'
 /**
  * POST /api/admin/batch-ingest
  *
@@ -441,6 +443,8 @@ function buildCodeSnippets(results: IngestResult[]) {
 // ─── Route handler (SSE streaming) ────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  const authError = requireAdminAccess(request)
+  if (authError) return authError
   const body = await request.json() as {
     candidates: CandidateModel[]
     dryRun?: boolean

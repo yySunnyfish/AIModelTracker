@@ -13,6 +13,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireAdminAccess } from '@/lib/route_auth'
 import { createServerClient } from '@/lib/supabase'
 import { MODEL_SCORES } from '@/data/model_scores'
 
@@ -22,7 +23,9 @@ const DIM_TO_BENCHMARK: Record<string, string> = {
   math:      'MATH',
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  const authError = requireAdminAccess(request)
+  if (authError) return authError
   const supabase = createServerClient()
 
   // Fetch all models from DB
@@ -69,7 +72,7 @@ export async function POST() {
           tested_at:        today,
           confidence_score: 1.0,
         },
-        { onConflict: 'model_id,benchmark_id' }
+        { onConflict: 'model_id,benchmark_id,tested_at,source' }
       )
       upserted++
     }

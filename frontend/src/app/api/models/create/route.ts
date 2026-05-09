@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
+import { requireWriteAccess } from '@/lib/route_auth'
 import { createServerClient } from '@/lib/supabase'
 import type { ExtractedModel } from '@/lib/extractor'
 import { MODEL_SCORES } from '@/data/model_scores'
 import { applyCanonicalSpecs } from '@/data/model_specs'
 
 export async function POST(request: Request) {
+  const authError = requireWriteAccess(request)
+  if (authError) return authError
   const raw: ExtractedModel = await request.json()
   // Ground truth override: canonical specs win over LLM extraction
   const body = applyCanonicalSpecs(raw)

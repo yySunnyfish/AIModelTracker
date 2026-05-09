@@ -11,10 +11,13 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireAdminAccess } from '@/lib/route_auth'
 import { createServerClient } from '@/lib/supabase'
 import { MODEL_SPECS } from '@/data/model_specs'
 
-export async function POST() {
+export async function POST(request: Request) {
+  const authError = requireAdminAccess(request)
+  if (authError) return authError
   const supabase = createServerClient()
 
   const { data: dbModels, error } = await supabase

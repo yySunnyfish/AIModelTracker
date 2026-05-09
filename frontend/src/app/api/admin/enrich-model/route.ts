@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server'
+import { requireAdminAccess } from '@/lib/route_auth'
 /**
  * POST /api/admin/enrich-model
  *
@@ -19,6 +21,8 @@ import { getBenchmarkIdMap } from '@/lib/benchmark_seeder'
 export const maxDuration = 300
 
 export async function POST(request: Request) {
+  const authError = requireAdminAccess(request)
+  if (authError) return authError
   const body    = await request.json().catch(() => ({}))
   const modelIds: string[] | undefined = body.modelIds
 

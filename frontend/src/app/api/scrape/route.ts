@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { requireWriteAccess } from '@/lib/route_auth'
 import { extractModelData, ExtractedModel } from '@/lib/extractor'
 import { createServerClient } from '@/lib/supabase'
 import { getOfficialBenchmarks, normBenchmarkName } from '@/lib/benchmark_scrapers'
@@ -117,7 +118,7 @@ async function saveBenchmarks(
           tested_at:        today,
           confidence_score: b.confidence_score,
         },
-        { onConflict: 'model_id,benchmark_id' },
+        { onConflict: 'model_id,benchmark_id,tested_at,source' },
       )
 
     if (error) {
@@ -134,6 +135,8 @@ async function saveBenchmarks(
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
+  const authError = requireWriteAccess(request)
+  if (authError) return authError
   const body = await request.json()
   const { url, modelName, company, modelId, saveToDb = false } = body as {
     url?: string

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createAnonServerClient, createServerClient } from '@/lib/supabase'
+import { requireWriteAccess } from '@/lib/route_auth'
 import { applyCanonicalSpecs } from '@/data/model_specs'
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = createServerClient()
+  const supabase = createAnonServerClient()
   const { data, error } = await supabase
     .from('models')
     .select(`
@@ -23,6 +24,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authError = requireWriteAccess(request)
+  if (authError) return authError
   const { id } = await params
   const rawBody = await request.json()
 

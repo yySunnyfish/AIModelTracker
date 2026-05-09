@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createAnonServerClient } from '@/lib/supabase'
 
 export async function GET() {
-  const supabase = createServerClient()
+  const supabase = createAnonServerClient()
 
   const { data: companies, error } = await supabase
     .from('companies')

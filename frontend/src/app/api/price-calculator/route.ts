@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createAnonServerClient } from '@/lib/supabase'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const inputTokensM = parseFloat(searchParams.get('input') ?? '1')   // 百万 tokens
   const outputTokensM = parseFloat(searchParams.get('output') ?? '0.5')
 
-  const supabase = createServerClient()
+  const supabase = createAnonServerClient()
 
   // 取每个模型的最新价格
   const { data, error } = await supabase

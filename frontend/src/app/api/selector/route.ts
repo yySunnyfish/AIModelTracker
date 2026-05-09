@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createAnonServerClient } from '@/lib/supabase'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const maxPrice = parseFloat(searchParams.get('maxPrice') ?? '999')
   const minSwe = parseFloat(searchParams.get('minSwe') ?? '0')
 
-  const supabase = createServerClient()
+  const supabase = createAnonServerClient()
 
   let query = supabase
     .from('models')
