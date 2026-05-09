@@ -6,7 +6,7 @@ import { MODEL_SCORES } from '@/data/model_scores'
 import { applyCanonicalSpecs } from '@/data/model_specs'
 
 export async function POST(request: Request) {
-  const authError = requireWriteAccess(request)
+  const authError = await requireWriteAccess(request)
   if (authError) return authError
   const raw: ExtractedModel = await request.json()
   // Ground truth override: canonical specs win over LLM extraction

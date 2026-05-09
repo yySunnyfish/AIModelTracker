@@ -16,7 +16,7 @@ import { createServerClient } from '@/lib/supabase'
 import { MODEL_SPECS } from '@/data/model_specs'
 
 export async function POST(request: Request) {
-  const authError = requireAdminAccess(request)
+  const authError = await requireAdminAccess(request)
   if (authError) return authError
   const supabase = createServerClient()
 

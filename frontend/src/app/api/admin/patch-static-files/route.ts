@@ -103,7 +103,7 @@ function appendToRecord(
 // ─── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const authError = requireAdminAccess(request)
+  const authError = await requireAdminAccess(request)
   if (authError) return authError
   if (!isUnsafeFilePatchEnabled()) {
     return NextResponse.json({ error: 'Static file patching is disabled by default' }, { status: 403 })

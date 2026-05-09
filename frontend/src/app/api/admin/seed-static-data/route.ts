@@ -18,7 +18,7 @@ import { MODEL_SCORES } from '@/data/model_scores'
 import { MODEL_PROFILES } from '@/data/model_profiles'
 
 export async function POST(request: Request) {
-  const authError = requireAdminAccess(request)
+  const authError = await requireAdminAccess(request)
   if (authError) return authError
   const { searchParams } = new URL(request.url)
   const force = searchParams.get('force') === 'true'

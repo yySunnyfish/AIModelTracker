@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const authError = requireWriteAccess(request)
+  const authError = await requireWriteAccess(request)
   if (authError) return authError
   const body = await request.json()
   const { model_id, content, author_name, visibility = 'public' } = body

@@ -24,7 +24,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const authError = requireWriteAccess(request)
+  const authError = await requireWriteAccess(request)
   if (authError) return authError
   const { id } = await params
   const rawBody = await request.json()

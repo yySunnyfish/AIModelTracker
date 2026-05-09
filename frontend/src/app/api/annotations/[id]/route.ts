@@ -3,7 +3,7 @@ import { requireWriteAccess } from '@/lib/route_auth'
 import { createServerClient } from '@/lib/supabase'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const authError = requireWriteAccess(request)
+  const authError = await requireWriteAccess(request)
   if (authError) return authError
   const { id } = await params
   const body = await request.json()
@@ -28,7 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const authError = requireWriteAccess(request)
+  const authError = await requireWriteAccess(request)
   if (authError) return authError
   const { id } = await params
   const supabase = createServerClient()

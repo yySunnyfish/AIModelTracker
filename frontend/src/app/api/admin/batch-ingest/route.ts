@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server'
 import { requireAdminAccess } from '@/lib/route_auth'
+import { extractModelData, ExtractedModel } from '@/lib/extractor'
+import { fetchMultiSource } from '@/lib/multi_source_fetcher'
+import { getModelSources } from '@/lib/source_registry'
+import { getOfficialBenchmarks } from '@/lib/benchmark_scrapers'
+import { normBenchmarkName } from '@/lib/benchmark_scrapers'
+import { validateExtracted } from '@/lib/field_validator'
+import { createServerClient } from '@/lib/supabase'
+import { applyCanonicalSpecs } from '@/data/model_specs'
+import type { CandidateModel } from '@/lib/company_discovery'
+import { enrichFromOpenRouter } from '@/lib/openrouter_enricher'
+import { getBenchmarkIdMap } from '@/lib/benchmark_seeder'
+
 /**
  * POST /api/admin/batch-ingest
  *
@@ -17,17 +29,6 @@ import { requireAdminAccess } from '@/lib/route_auth'
  *   data: { type: 'done', created, dry_run, failed }
  */
 
-import { extractModelData, ExtractedModel } from '@/lib/extractor'
-import { fetchMultiSource } from '@/lib/multi_source_fetcher'
-import { getModelSources } from '@/lib/source_registry'
-import { getOfficialBenchmarks } from '@/lib/benchmark_scrapers'
-import { normBenchmarkName } from '@/lib/benchmark_scrapers'
-import { validateExtracted } from '@/lib/field_validator'
-import { createServerClient } from '@/lib/supabase'
-import { applyCanonicalSpecs } from '@/data/model_specs'
-import type { CandidateModel } from '@/lib/company_discovery'
-import { enrichFromOpenRouter } from '@/lib/openrouter_enricher'
-import { getBenchmarkIdMap } from '@/lib/benchmark_seeder'
 
 // Increase route timeout for long scrape batches (Next.js / Vercel)
 export const maxDuration = 300
@@ -443,7 +444,7 @@ function buildCodeSnippets(results: IngestResult[]) {
 // ─── Route handler (SSE streaming) ────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const authError = requireAdminAccess(request)
+  const authError = await requireAdminAccess(request)
   if (authError) return authError
   const body = await request.json() as {
     candidates: CandidateModel[]
@@ -540,3 +541,4 @@ export async function POST(request: Request) {
     },
   })
 }
+

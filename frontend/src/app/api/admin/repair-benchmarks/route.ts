@@ -24,7 +24,7 @@ const DIM_TO_BENCHMARK: Record<string, string> = {
 }
 
 export async function POST(request: Request) {
-  const authError = requireAdminAccess(request)
+  const authError = await requireAdminAccess(request)
   if (authError) return authError
   const supabase = createServerClient()
 

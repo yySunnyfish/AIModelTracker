@@ -7,52 +7,6 @@ import { fetchMultiSource, EvidenceMap } from '@/lib/multi_source_fetcher'
 import { getModelSources } from '@/lib/source_registry'
 import { validateExtracted, ValidationReport } from '@/lib/field_validator'
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function computeDiff(existing: Record<string, any>, extracted: ExtractedModel) {
-  const fieldMap: Record<string, keyof ExtractedModel> = {
-    name: 'name', params: 'params', context_window: 'context_window',
-    license: 'license', architecture: 'architecture', innovation: 'innovation',
-  }
-  const diff: Record<string, { old: any; new: any }> = {}
-  for (const [dbKey, extKey] of Object.entries(fieldMap)) {
-    const oldVal = existing[dbKey]
-    const newVal = extracted[extKey]
-    if (newVal !== null && String(oldVal ?? '') !== String(newVal)) {
-      diff[dbKey] = { old: oldVal ?? null, new: newVal }
-    }
-  }
-  if (extracted.input_price !== null) {
-    const oldIn = existing.pi ?? existing.input_price ?? null
-    if (oldIn !== extracted.input_price) diff.input_price = { old: oldIn, new: extracted.input_price }
-  }
-  if (extracted.output_price !== null) {
-    const oldOut = existing.po ?? existing.output_price ?? null
-    if (oldOut !== extracted.output_price) diff.output_price = { old: oldOut, new: extracted.output_price }
-  }
-  return diff
-}
-
-function buildWarnings(e: ExtractedModel, mode: string, failedUrls: string[], urlProvided: boolean): string[] {
-  const warnings: string[] = []
-  if (mode === 'knowledge') {
-    if (urlProvided && failedUrls.length > 0) {
-      warnings.push('⚠ 提供的 URL 抓取失败，已退回 LLM 知识模式，信息可能不是最新版本')
-    } else if (urlProvided) {
-      warnings.push('⚠ URL 无法访问，已退回 LLM 知识模式，信息可能不是最新版本')
-    } else {
-      warnings.push('⚠ 无URL：使用 Claude 训练数据，信息可能不是最新版本')
-    }
-  }
-  if (failedUrls.length > 0) warnings.push(`${failedUrls.length} 个来源抓取失败`)
-  const lowFields = Object.entries(e.confidence ?? {}).filter(([, v]) => v === 'low').map(([k]) => k)
-  if (lowFields.length) warnings.push(`低置信度字段: ${lowFields.join(', ')}`)
-  if (!e.release_date) warnings.push('未找到发布日期')
-  if (!e.input_price && !e.output_price) warnings.push('未找到定价信息')
-  if (!e.benchmarks?.length) warnings.push('未找到 benchmark 数据')
-  return warnings
-}
-
 /**
  * Extract the Artificial Analysis URL slug from a model's registry entry.
  * AA URLs look like: https://artificialanalysis.ai/models/claude-3-7-sonnet
@@ -135,7 +89,7 @@ async function saveBenchmarks(
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const authError = requireWriteAccess(request)
+  const authError = await requireWriteAccess(request)
   if (authError) return authError
   const body = await request.json()
   const { url, modelName, company, modelId, saveToDb = false } = body as {
@@ -313,4 +267,51 @@ export async function POST(request: Request) {
   } catch (err: any) {
     return NextResponse.json({ error: err.message ?? 'Scrape failed' }, { status: 500 })
   }
+}
+
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function computeDiff(existing: Record<string, any>, extracted: ExtractedModel) {
+  const fieldMap: Record<string, keyof ExtractedModel> = {
+    name: 'name', params: 'params', context_window: 'context_window',
+    license: 'license', architecture: 'architecture', innovation: 'innovation',
+  }
+  const diff: Record<string, { old: any; new: any }> = {}
+  for (const [dbKey, extKey] of Object.entries(fieldMap)) {
+    const oldVal = existing[dbKey]
+    const newVal = extracted[extKey]
+    if (newVal !== null && String(oldVal ?? '') !== String(newVal)) {
+      diff[dbKey] = { old: oldVal ?? null, new: newVal }
+    }
+  }
+  if (extracted.input_price !== null) {
+    const oldIn = existing.pi ?? existing.input_price ?? null
+    if (oldIn !== extracted.input_price) diff.input_price = { old: oldIn, new: extracted.input_price }
+  }
+  if (extracted.output_price !== null) {
+    const oldOut = existing.po ?? existing.output_price ?? null
+    if (oldOut !== extracted.output_price) diff.output_price = { old: oldOut, new: extracted.output_price }
+  }
+  return diff
+}
+
+function buildWarnings(e: ExtractedModel, mode: string, failedUrls: string[], urlProvided: boolean): string[] {
+  const warnings: string[] = []
+  if (mode === 'knowledge') {
+    if (urlProvided && failedUrls.length > 0) {
+      warnings.push('⚠ 提供的 URL 抓取失败，已退回 LLM 知识模式，信息可能不是最新版本')
+    } else if (urlProvided) {
+      warnings.push('⚠ URL 无法访问，已退回 LLM 知识模式，信息可能不是最新版本')
+    } else {
+      warnings.push('⚠ 无URL：使用 Claude 训练数据，信息可能不是最新版本')
+    }
+  }
+  if (failedUrls.length > 0) warnings.push(`${failedUrls.length} 个来源抓取失败`)
+  const lowFields = Object.entries(e.confidence ?? {}).filter(([, v]) => v === 'low').map(([k]) => k)
+  if (lowFields.length) warnings.push(`低置信度字段: ${lowFields.join(', ')}`)
+  if (!e.release_date) warnings.push('未找到发布日期')
+  if (!e.input_price && !e.output_price) warnings.push('未找到定价信息')
+  if (!e.benchmarks?.length) warnings.push('未找到 benchmark 数据')
+  return warnings
 }

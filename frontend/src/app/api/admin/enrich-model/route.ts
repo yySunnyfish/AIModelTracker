@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 import { requireAdminAccess } from '@/lib/route_auth'
+import { createServerClient } from '@/lib/supabase'
+import { enrichFromOpenRouter } from '@/lib/openrouter_enricher'
+import { getBenchmarkIdMap } from '@/lib/benchmark_seeder'
+
 /**
  * POST /api/admin/enrich-model
  *
@@ -14,14 +18,11 @@ import { requireAdminAccess } from '@/lib/route_auth'
  *   data: { type: 'done', enriched, skipped, total }
  */
 
-import { createServerClient } from '@/lib/supabase'
-import { enrichFromOpenRouter } from '@/lib/openrouter_enricher'
-import { getBenchmarkIdMap } from '@/lib/benchmark_seeder'
 
 export const maxDuration = 300
 
 export async function POST(request: Request) {
-  const authError = requireAdminAccess(request)
+  const authError = await requireAdminAccess(request)
   if (authError) return authError
   const body    = await request.json().catch(() => ({}))
   const modelIds: string[] | undefined = body.modelIds
@@ -125,3 +126,4 @@ export async function POST(request: Request) {
     },
   })
 }
+

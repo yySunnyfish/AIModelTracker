@@ -40,7 +40,7 @@ function today(): string {
 }
 
 export async function GET(request: Request) {
-  const authError = requireAdminAccess(request)
+  const authError = await requireAdminAccess(request)
   if (authError) return authError
   const { searchParams } = new URL(request.url)
   const since      = searchParams.get('since')    ?? defaultSince()
