@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { signOut, useSession } from 'next-auth/react'
 
 interface HeaderProps {
   activeView: string
@@ -10,6 +11,9 @@ interface HeaderProps {
 }
 
 export function Header({ activeView, onNavChange, onAddModel, onDiscoverModels }: HeaderProps) {
+  const { data: session, status } = useSession()
+  const role = (session?.user as { role?: string } | undefined)?.role ?? null
+  const username = session?.user?.name ?? 'Signed in'
   const navItems = [
     { id: 'timeline', label: 'Timeline', href: null },
     { id: 'leaderboards', label: 'Leaderboards', href: null },
@@ -59,7 +63,32 @@ export function Header({ activeView, onNavChange, onAddModel, onDiscoverModels }
       </nav>
 
       {/* Right side */}
-      <div className="ml-auto flex gap-2">
+      <div className="ml-auto flex items-center gap-2">
+        {status === 'authenticated' ? (
+          <div className="mr-1 flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg2)] px-3 py-1.5">
+            <div className="text-right">
+              <div className="text-[10px] font-semibold text-[var(--t1)]">{username}</div>
+              <div className="text-[9px] uppercase tracking-[0.12em] text-[var(--t3)]">{role ?? 'viewer'}</div>
+            </div>
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="rounded-full border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--t2)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--t1)]"
+            >
+              Sign out
+            </button>
+          </div>
+        ) : status === 'loading' ? (
+          <div className="mr-1 rounded-full border border-[var(--border)] bg-[var(--bg2)] px-3 py-1.5 text-[10px] text-[var(--t3)]">
+            Checking session...
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="mr-1 rounded-full border border-[var(--border)] bg-[var(--bg2)] px-3 py-1.5 text-[10px] font-medium text-[var(--t2)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--t1)]"
+          >
+            Sign in
+          </Link>
+        )}
         {onDiscoverModels && (
           <button
             onClick={onDiscoverModels}

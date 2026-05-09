@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 const CATEGORIES = [
   { key: '', label: 'All' },
@@ -14,6 +15,7 @@ const CATEGORIES = [
 ]
 
 export default function SelectorPage() {
+  const { data: session } = useSession()
   const [license, setLicense] = useState('')
   const [category, setCategory] = useState('')
   const [maxPrice, setMaxPrice] = useState(20)
@@ -45,6 +47,9 @@ export default function SelectorPage() {
         <Link href="/" className="text-xs text-[var(--t3)] hover:text-[var(--t1)]">← Back</Link>
         <h1 className="text-sm font-semibold text-[var(--t1)]">Model Selector</h1>
         <span className="text-xs text-[var(--t3)]">Multi-criteria model recommendation</span>
+        <span className="ml-auto text-[10px] text-[var(--t3)]">
+          {session?.user ? `Signed in as ${session.user.name ?? 'user'}` : 'Browse mode'}
+        </span>
       </div>
 
       {/* Filters */}

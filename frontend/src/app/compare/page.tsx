@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 const ALL_BENCHMARKS = ['SWE-bench', 'MMLU']
 
@@ -35,6 +36,8 @@ type Annotation = {
 }
 
 export default function ComparePage() {
+  const { data: session } = useSession()
+  const canEdit = !!session?.user
   const [allModels, setAllModels] = useState<{ id: string; name: string; company: string }[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [compared, setCompared] = useState<Model[]>([])
@@ -89,6 +92,7 @@ export default function ComparePage() {
   }
 
   const submitAnnotation = async (modelId: string) => {
+    if (!canEdit) return
     if (!newContent.trim()) return
     setAnnotLoading(true)
     await fetch('/api/annotations', {
@@ -102,11 +106,13 @@ export default function ComparePage() {
   }
 
   const deleteAnnotation = async (annotId: string, modelId: string) => {
+    if (!canEdit) return
     await fetch(`/api/annotations/${annotId}`, { method: 'DELETE' })
     loadAnnotations(modelId)
   }
 
   const startEdit = (model: Model) => {
+    if (!canEdit) return
     setEditingModel(model.id)
     setEditFields({
       params: model.params,
@@ -119,6 +125,7 @@ export default function ComparePage() {
   }
 
   const saveEdit = async (modelId: string) => {
+    if (!canEdit) return
     setSaveLoading(true)
     await fetch(`/api/models/${modelId}`, {
       method: 'PATCH',
@@ -210,10 +217,13 @@ export default function ComparePage() {
                       </button>
                       <button
                         onClick={() => editingModel === m.id ? setEditingModel(null) : startEdit(m)}
+                        disabled={!canEdit}
                         className={`rounded border px-1.5 py-0.5 text-[10px] transition-colors ${
                           editingModel === m.id
                             ? 'border-blue-300 bg-blue-50 text-blue-800'
-                            : 'border-[var(--border)] text-[var(--t3)] hover:border-blue-300'
+                            : canEdit
+                            ? 'border-[var(--border)] text-[var(--t3)] hover:border-blue-300'
+                            : 'border-[var(--border)] text-[var(--t3)] opacity-40 cursor-not-allowed'
                         }`}
                       >
                         ✏️ Edit
@@ -374,6 +384,7 @@ export default function ComparePage() {
                   <span className="text-[10px] text-[var(--t3)]">{new Date(a.created_at).toLocaleDateString()}</span>
                   <button
                     onClick={() => deleteAnnotation(a.id, m.id)}
+                    disabled={!canEdit}
                     className="ml-auto text-[10px] text-[var(--t3)] hover:text-red-500"
                   >✕</button>
                 </div>
@@ -388,6 +399,7 @@ export default function ComparePage() {
               placeholder="Your name"
               value={newAuthor}
               onChange={e => setNewAuthor(e.target.value)}
+              disabled={!canEdit}
               className="w-24 rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1 text-xs text-[var(--t1)] focus:outline-none focus:ring-1 focus:ring-blue-400"
             />
             <input
@@ -395,16 +407,20 @@ export default function ComparePage() {
               value={newContent}
               onChange={e => setNewContent(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && submitAnnotation(m.id)}
+              disabled={!canEdit}
               className="flex-1 rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1 text-xs text-[var(--t1)] focus:outline-none focus:ring-1 focus:ring-blue-400"
             />
             <button
               onClick={() => submitAnnotation(m.id)}
-              disabled={annotLoading || !newContent.trim()}
+              disabled={!canEdit || annotLoading || !newContent.trim()}
               className="rounded bg-blue-500 px-3 py-1 text-[11px] text-white hover:bg-blue-600 disabled:opacity-40"
             >
               Post
             </button>
           </div>
+          {!canEdit && (
+            <p className="mt-2 text-[10px] text-[var(--t3)]">Sign in to post annotations or edit compared models.</p>
+          )}
         </div>
       ))}
     </div>

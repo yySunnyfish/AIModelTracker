@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useSession } from 'next-auth/react'
 import { GPUS, PRECISIONS, calcDeploy } from '@/data/hardware'
 import { LLM_MODELS, EMBODIED_MODELS } from '@/data/static'
 
@@ -91,6 +92,7 @@ function VRAMBar({ label, bytes, total, color }: { label: string; bytes: number;
 // ── main page ─────────────────────────────────────────────────────────────────
 
 export default function DeployPage() {
+  const { data: session } = useSession()
   const [activeParamsB, setActiveParamsB] = useState(7)
   const [totalParamsB,  setTotalParamsB]  = useState(7)
   const [isMoE,         setIsMoE]         = useState(false)
@@ -137,6 +139,9 @@ export default function DeployPage() {
         <a href="/" className="text-[11px] text-[var(--t3)] hover:text-[var(--t1)]">← ModelTrack</a>
         <span className="text-[var(--border)]">/</span>
         <span className="text-[11px] font-semibold text-[var(--t1)]">Deployment Cost Estimator</span>
+        <span className="ml-auto text-[10px] text-[var(--t3)]">
+          {session?.user ? `Signed in as ${session.user.name ?? 'user'}` : 'Public calculator'}
+        </span>
       </div>
 
       <div className="mx-auto max-w-6xl p-6">
